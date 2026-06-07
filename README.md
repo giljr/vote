@@ -23,6 +23,11 @@ Nele você aprenderá a:
 ```
 ---
 
+Another project: **Most Python Beginners Learn Matrices the Hard Way - Use Pandas Instead** [Pandas Project](https://medium.com/p/19f41a0cc492/
+) Create, combine, and manipulate matrices effortlessly while building a professional WSL2 + VS Code development setup. 
+
+---
+
 ## 🛠 Tecnologias
 
 * Windows 11
@@ -44,6 +49,9 @@ python/
 |       ├── main_1.py
 |       ├── .env
 |       ├── .gitignore
+|  |_ pandas
+|       ├── 01_matrix.ipynb
+|       ├── 02 soon...
 └── README.md
 ```
 
@@ -201,7 +209,9 @@ Leia os tutoriais completos no Medium:
 
 02# [Windows 11 + WSL2 + OpenAI: Primeiros Passos com Python e VS Code](https://medium.com/jungletronics/windows-11-wsl2-openai-primeiros-passos-com-python-e-vs-code-epis%C3%B3dio-2-7818719f4342)
 
-03# soon... :)
+03# [Most Python Beginners Learn Matrices the Hard Way - Use Pandas Instead](https://medium.com/p/19f41a0cc492/)
+
+04# soon... :)
 
 ---
 
