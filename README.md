@@ -1,9 +1,14 @@
 
 # 🚀 Windows 11 + WSL2 + OpenAI + Python
+> First steps with Artificial Intelligence using Windows 11, WSL2, Ubuntu, VS Code, and the OpenAI API, and Django.
 
 > Primeiros passos com Inteligência Artificial utilizando **Windows 11**, **WSL2**, **Ubuntu**, **VS Code** e a **API da OpenAI**.
 
-![Python](https://img.shields.io/badge/Python-3.x-blue) ![WSL2](https://img.shields.io/badge/WSL2-Ubuntu%2024.04-orange) ![VSCode](https://img.shields.io/badge/VS_Code-Ready-blue) ![OpenAI](https://img.shields.io/badge/OpenAI-API-green)
+![Python](https://img.shields.io/badge/Python-3.x-blue)
+![WSL2](https://img.shields.io/badge/WSL2-Ubuntu%2024.04-orange)
+![OpenAI](https://img.shields.io/badge/OpenAI-API-green)
+![VSCode](https://img.shields.io/badge/VS_Code-Ready-blue)
+![Django](https://img.shields.io/badge/Django-6.0-darkgreen)
 
 ---
 
@@ -37,6 +42,7 @@ Another project: **Most Python Beginners Learn Matrices the Hard Way - Use P
 * VS Code
 * OpenAI API
 * python-dotenv
+* Django
 
 ---
 
@@ -44,14 +50,19 @@ Another project: **Most Python Beginners Learn Matrices the Hard Way - Use P
 
 ```text
 python/
-│  |_ machine-learning (first lessons about openAI)
+├── machine-learning (first lessons about openAI)
 |       ├── main_0.py
 |       ├── main_1.py
 |       ├── .env
 |       ├── .gitignore
-|  |_ pandas
+├── pandas
 |       ├── 01_matrix.ipynb
 |       ├── 02 soon...
+├── django
+│   ├── 0
+│   ├── 1
+│   ├── 2
+│   |    ...
 └── README.md
 ```
 
@@ -205,6 +216,8 @@ Transformar um computador Windows 11 em uma workstation moderna para desenvolvim
 
 Leia os tutoriais completos no Medium:
 
+### WSL 
+
 01# [Como Transformar o Windows 11 em uma Workstation Rails com WSL2 e Docker e IA](https://medium.com/jungletronics/como-transformar-o-windows-11-em-uma-workstation-rails-com-wsl2-e-docker-08bd29a50f4f)
 
 02# [Windows 11 + WSL2 + OpenAI: Primeiros Passos com Python e VS Code](https://medium.com/jungletronics/windows-11-wsl2-openai-primeiros-passos-com-python-e-vs-code-epis%C3%B3dio-2-7818719f4342)
@@ -212,6 +225,28 @@ Leia os tutoriais completos no Medium:
 03# [Most Python Beginners Learn Matrices the Hard Way - Use Pandas Instead](https://medium.com/p/19f41a0cc492/)
 
 04# soon... :)
+
+### IA
+
+01# 📖 [The Claude Code Skills Journey](https://medium.com/jungletronics/the-claude-code-skills-journey-096bd803bc90)
+Documenting discoveries, experiments, and lessons learned while pushing the boundaries of AI-assisted software development
+
+02# ⚡ [From SKILL.md to Superpower: Deploying a Claude Skill](https://medium.com/jungletronics/from-skill-md-to-superpower-deploying-a-claude-skill-7b75982e93ba)
+Build your first custom Skill and turn Claude into a specialized tool for Ruby security audits
+
+### DJANGO
+
+01# 🐍 [Django from Zero to Pro — Episode 0](https://medium.com/jungletronics/django-from-zero-to-pro-setup-in-minutes-clean-modern-structure-17922233e957)
+Build a Clean Django Development Environment in Minutes
+
+02# [Django MVC EXPOSED (You’ve Been Learning It Wrong) — Episode 1](https://medium.com/jungletronics/episode-1-django-mvc-exposed-youve-been-learning-it-wrong-8aa038600928)
+The Simple Framework That Powers Instagram, YouTube, and Netflix (and Why Everyone Misunderstands It)
+
+03# [Stop Being Confused by Django’s Structure — Episode 3](https://medium.com/jungletronics/stop-being-confused-by-djangos-structure-3c1607a7fee7)
+Master the Django file structure before building real applications — no more guessing what each file does — # Episode 3
+
+04# [Dockerize Django Like a Pro — The Production Setup Every Developer Should Know — Episode 4](https://medium.com/jungletronics/dockerize-django-like-a-pro-the-production-setup-every-developer-should-know-episode-4-948c480f4cdc)
+Stop running Django the old way. Learn the clean, production-style Docker workflow used by modern teams — simple, reproducible, and ready for real-world deployment
 
 ---
 
