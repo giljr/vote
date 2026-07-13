@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ topic.title }} — Vote</title>
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/signin.css') }}" rel="stylesheet">
+  </head>
+  <body>
+    <main class="container" style="max-width: 640px; padding-top: 40px;">
+      <section class="panel panel-success">
+        <div class="panel-heading"><h1 class="panel-title">{{ topic.title }}</h1></div>
+        <div class="panel-body">
+          <p>Choose one option and submit your vote. No account is required.</p>
+          <form id="vote-form">
+            {% for poll in topic.options.all() %}
+              <div class="radio">
+                <label><input type="radio" name="option" value="{{ poll.option.name }}" required> {{ poll.option.name }}</label>
+              </div>
+            {% endfor %}
+            <button class="btn btn-success" type="submit">Submit vote</button>
+          </form>
+          <p id="vote-message" role="status" style="margin-top: 16px;"></p>
+        </div>
+      </section>
+      <aside class="text-center">
+        <p>Share this poll</p>
+        <img src="{{ url_for('vote_qr_code', topic_id=topic.id) }}" alt="QR code for {{ topic.title }}" width="220" height="220">
+      </aside>
+    </main>
+    <script>
+      document.getElementById('vote-form').addEventListener('submit', async function (event) {
+        event.preventDefault();
+        const option = new FormData(event.currentTarget).get('option');
+        const response = await fetch('{{ url_for('api.api_poll_vote') }}', {
+          method: 'PATCH',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({topic_id: {{ topic.id }}, option: option})
+        });
+        const result = await response.json();
+        document.getElementById('vote-message').textContent = result.message;
+        if (response.ok && result.message === 'Thank you for voting') {
+          event.currentTarget.querySelectorAll('input, button').forEach(function (element) { element.disabled = true; });
+        }
+      });
+    </script>
+  </body>
+</html>
