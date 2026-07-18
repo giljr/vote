@@ -7,6 +7,10 @@ from flask import Flask
 from config import config
 from models import db
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 # Create Flask application instance
 app = Flask(__name__)
 
