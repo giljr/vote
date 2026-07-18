@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vote Application</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+
+<body>
+
+    <div class="container">
+
+        <header>
+            <h1>🗳 Vote Application</h1>
+            <p class="subtitle">
+                A beginner Flask application using SQLAlchemy.
+            </p>
+        </header>
+
+        {% if polls %}
+
+            <section class="poll">
+
+                <h2>{{ polls[0].topic.title }}</h2>
+
+                <form method="POST" action="#">
+
+                    {% for poll in polls %}
+
+                        <div class="poll-option">
+
+                            <label>
+
+                                <input
+                                    type="radio"
+                                    name="option"
+                                    value="{{ poll.id }}"
+                                >
+
+                                <span class="option-name">
+                                    {{ poll.option.name }}
+                                </span>
+
+                                <span class="vote-count">
+                                    {{ poll.vote_count }}
+                                    vote{% if poll.vote_count != 1 %}s{% endif %}
+                                </span>
+
+                            </label>
+
+                        </div>
+
+                    {% endfor %}
+
+                    <button
+                        type="submit"
+                        disabled
+                    >
+                        Vote (Coming Soon)
+                    </button>
+
+                </form>
+
+            </section>
+
+        {% else %}
+
+            <section class="poll">
+
+                <h2>No Polls Available</h2>
+
+                <p>
+                    The database does not contain any polls yet.
+                </p>
+
+                <p>
+                    Populate it by running:
+                </p>
+
+                <pre>flask --app vote seed</pre>
+
+            </section>
+
+        {% endif %}
+
+    </div>
+
+</body>
+
+</html>

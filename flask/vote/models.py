@@ -1,51 +1,141 @@
+"""
+Database models for Vote application.
+
+Uses Flask-SQLAlchemy ORM.
+"""
+
+from datetime import datetime
+
 from flask_sqlalchemy import SQLAlchemy
+
 
 db = SQLAlchemy()
 
 
 class Base(db.Model):
-    """Base model for other models to inherit from."""
+    """
+    Base model.
+
+    Provides common fields:
+    - id
+    - creation date
+    - modification date
+    """
+
     __abstract__ = True
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    date_created = db.Column(db.DateTime, default=db.func.current_timestamp())
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    date_created = db.Column(
+        db.DateTime,
+        default=datetime.utcnow
+    )
+
     date_modified = db.Column(
         db.DateTime,
-        default=db.func.current_timestamp(),
-        onupdate=db.func.current_timestamp()
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow
     )
 
 
-class Topics(Base):
-    """Model for poll topics."""
-    title = db.Column(db.String(500))
+class Topic(Base):
+    """
+    Represents a voting topic.
+    """
+
+    __tablename__ = "topics"
+
+    title = db.Column(
+        db.String(500),
+        nullable=False
+    )
+
 
     def __repr__(self):
-        return self.title
+        return f"<Topic {self.title}>"
 
 
-class Options(Base):
-    """Model for poll options."""
-    name = db.Column(db.String(200))
+class Option(Base):
+    """
+    Represents a possible voting option.
+    """
+
+    __tablename__ = "options"
+
+    name = db.Column(
+        db.String(200),
+        nullable=False
+    )
+
 
     def __repr__(self):
-        return self.name
+        return f"<Option {self.name}>"
 
 
-class Polls(Base):
-    """Model to connect topics and options together."""
-    topic_id = db.Column(db.Integer, db.ForeignKey('topics.id'))
-    option_id = db.Column(db.Integer, db.ForeignKey('options.id'))
-    vote_count = db.Column(db.Integer, default=0)
-    status = db.Column(db.Boolean)  # Mark poll as open or closed
+class Poll(Base):
+    """
+    Connects a topic with available options.
 
-    # Relationships for easier access across related models
+    Example:
+
+    Topic:
+        Favorite programming language?
+
+    Options:
+        Python
+        Ruby
+        JavaScript
+    """
+
+    __tablename__ = "polls"
+
+
+    topic_id = db.Column(
+        db.Integer,
+        db.ForeignKey("topics.id"),
+        nullable=False
+    )
+
+
+    option_id = db.Column(
+        db.Integer,
+        db.ForeignKey("options.id"),
+        nullable=False
+    )
+
+
+    vote_count = db.Column(
+        db.Integer,
+        default=0
+    )
+
+
+    status = db.Column(
+        db.Boolean,
+        default=True
+    )
+
+
     topic = db.relationship(
-        'Topics',
-        foreign_keys=[topic_id],
-        backref=db.backref('polls', lazy='dynamic')
+        "Topic",
+        backref=db.backref(
+            "polls",
+            lazy=True
+        )
     )
-    option = db.relationship('Options', foreign_keys=[option_id])
+
+
+    option = db.relationship(
+        "Option"
+    )
+
 
     def __repr__(self):
-        return f"Poll: {self.option.name}"
+        return (
+            f"<Poll "
+            f"{self.topic.title}: "
+            f"{self.option.name}>"
+        )

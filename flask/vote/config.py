@@ -1,43 +1,84 @@
-"""Configuration file for Vote application."""
+"""
+Application configuration.
+
+Supports:
+
+- Development
+- Production
+- Testing
+"""
+
 import os
 
-# Base directory
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, 'vote.db')
+
+BASE_DIR = os.path.abspath(
+    os.path.dirname(__file__)
+)
 
 
 class Config:
-    """Base configuration."""
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-key-change-in-production')
-    SQLALCHEMY_DATABASE_URI = f'sqlite:///{DB_PATH}'
+    """
+    Base configuration.
+    """
+
+    SECRET_KEY = os.environ.get(
+        "SECRET_KEY",
+        "development-secret-key"
+    )
+
+
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        "DATABASE_URL",
+        "sqlite:///" +
+        os.path.join(
+            BASE_DIR,
+            "instance",
+            "vote.db"
+        )
+    )
+
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ECHO = False
-    DEBUG = False
 
 
 class DevelopmentConfig(Config):
-    """Development configuration."""
+    """
+    Development settings.
+    """
+
     DEBUG = True
+
     SQLALCHEMY_ECHO = True
 
 
 class ProductionConfig(Config):
-    """Production configuration."""
-    SECRET_KEY = os.environ.get('SECRET_KEY')
-    if not SECRET_KEY:
-        raise ValueError("SECRET_KEY environment variable not set")
+    """
+    Production settings.
+    """
+
+    DEBUG = False
 
 
 class TestingConfig(Config):
-    """Testing configuration."""
+    """
+    Testing settings.
+    """
+
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+
+    SQLALCHEMY_DATABASE_URI = (
+        "sqlite:///:memory:"
+    )
 
 
-# Configuration dictionary for easy selection
 config = {
-    'development': DevelopmentConfig,
-    'production': ProductionConfig,
-    'testing': TestingConfig,
-    'default': DevelopmentConfig
+
+    "development": DevelopmentConfig,
+
+    "production": ProductionConfig,
+
+    "testing": TestingConfig,
+
+    "default": DevelopmentConfig
+
 }
