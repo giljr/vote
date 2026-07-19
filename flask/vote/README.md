@@ -1,120 +1,63 @@
-# Vote — Flask Voting & Subscription Platform
+# Vote
 
-A lightweight Flask web application that enables users to **subscribe to questions** and **submit answers** in real-time. Users can browse questions, follow topics they care about, and contribute their knowledge through answers.
+A small Flask and SQLAlchemy voting app built as a learning project.
 
-## Features
+## What it does
 
-- **Question Browsing** — View all posted questions and filter by category/topic
-- **User Subscription** — Subscribe to questions to receive notifications about new answers
-- **Answer Submission** — Users can submit answers to questions they're interested in
-- **Real-time Updates** — See new answers as they're posted (optional WebSocket enhancement)
-- **User Profiles** — Track your subscriptions and answer history
-- **Voting System** — Upvote/downvote answers to highlight the best solutions
+- Lecturers create voting sessions, questions, and answer options in advance
+- Participants join a session by scanning a QR code with their phone
+- Each participant can vote once per question
+- Results update live in the browser through JavaScript polling
 
 ## Tech Stack
 
-- **Framework**: Flask 3.1.3
-- **Language**: Python 3.12+
-- **Database**: (To be configured — SQLite/PostgreSQL recommended)
-- **Frontend**: HTML/CSS/JavaScript (Jinja2 templates)
+- Flask
+- Flask-SQLAlchemy
+- SQLite
+- Jinja2 templates
+- Plain JavaScript
 
-## Project Structure
-
-```
-vote/
-├── vote.py              # Main Flask application
-├── .venv/               # Virtual environment
-├── requirements.txt     # Python dependencies (to be created)
-├── templates/           # Jinja2 HTML templates (to be created)
-├── static/              # CSS, JavaScript, images (to be created)
-└── .github/
-    └── copilot-instructions.md
-```
-
-## Quick Start
-
-### 1. Activate Virtual Environment
-
-**On macOS/Linux:**
-```bash
-source .venv/bin/activate
-```
-
-**On Windows:**
-```bash
-.venv\Scripts\activate
-```
-
-### 2. Install Dependencies
+## Run It
 
 ```bash
 pip install -r requirements.txt
-```
-
-### 3. Run the Application
-
-**Option A — Direct Python:**
-```bash
 python vote.py
 ```
 
-**Option B — Flask CLI:**
+The app runs at `http://localhost:5000`.
+
+If you want a QR code that a phone can reach, set `PUBLIC_BASE_URL` to a network-accessible host such as `http://192.168.1.20:5000` before starting the app.
+
+## Screens
+
+- `/` participant view
+- `/admin` lecturer dashboard
+- `/join/<token>` QR login entry point
+- `/api/state` live participant data
+- `/api/admin/state` live admin data
+
+## Demo Data
+
+The app creates a sample session with a few questions the first time it starts against an empty database.
+
+If you want to seed again after clearing the database, run:
+
 ```bash
-export FLASK_APP=vote:votr  # or set FLASK_APP=vote:votr on Windows
-flask run --reload
+flask --app vote seed
 ```
 
-The app will be available at `http://localhost:5000`
+## Project Structure
 
-## Development
-
-### Project Entry Point
-
-The Flask app instance is named `votr` (not the conventional `app`). When using Flask CLI tools, always reference it as:
-```bash
-FLASK_APP=vote:votr flask <command>
+```text
+vote.py            Flask application and routes
+models.py          SQLAlchemy models
+templates/         HTML templates
+static/css/        Styling
+static/js/        Frontend behavior
 ```
 
-### Add Dependencies
+## Notes
 
-Update `requirements.txt` with new packages:
-```bash
-pip install <package-name>
-pip freeze > requirements.txt
-```
-
-### Running Tests
-
-Tests are not yet configured. To add pytest:
-```bash
-pip install pytest pytest-flask
-pytest tests/
-```
-
-## Next Steps / Roadmap
-
-- [ ] Set up database (SQLAlchemy ORM)
-- [ ] Create user authentication (login/register)
-- [ ] Build question model and database schema
-- [ ] Add answer submission & voting logic
-- [ ] Create HTML templates for question browsing
-- [ ] Implement subscription functionality
-- [ ] Add notification system
-- [ ] Write unit and integration tests
-- [ ] Deploy to production (Gunicorn + Nginx)
-
-## Contributing
-
-1. Create a feature branch: `git checkout -b feature/your-feature`
-2. Make your changes
-3. Commit with a clear message: `git commit -m "Add feature description"`
-4. Push to your branch: `git push origin feature/your-feature`
-5. Open a pull request
-
-## License
-
-MIT
-
-## Contact
-
-For questions or suggestions, open an issue on [GitHub](https://github.com/giljr/vote).
+- QR codes are rendered with an external QR image service using the session join URL.
+- For real phone scanning, point `PUBLIC_BASE_URL` at a reachable host or tunnel URL.
+- The implementation intentionally stays simple and framework-light so it is easy to study and extend.

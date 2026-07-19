@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="row g-3 g-lg-4 align-items-start">
+    <div class="col-12 col-xl-7">
+        <div class="hero-copy p-4 p-lg-5 mb-3 mb-lg-4">
+            <span class="eyebrow">Lecturer dashboard</span>
+            <h1 class="display-5 fw-semibold mt-3 mb-3">Create sessions, add questions, and generate a QR link for participants.</h1>
+            <p class="lead mb-4 text-secondary">
+                Build the voting flow before class starts, then share the QR code so participants can join from their phone.
+            </p>
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-primary btn-lg rounded-pill px-4" href="{{ url_for('index') }}">Open participant view</a>
+            </div>
+        </div>
+
+        <div class="card info-card border-0 shadow-sm mb-3">
+            <div class="card-body d-flex flex-wrap gap-3 justify-content-between align-items-center">
+                <div>
+                    <div class="text-uppercase small text-secondary fw-semibold mb-1">Scope</div>
+                    <div class="fw-semibold">Session control</div>
+                </div>
+                <div>
+                    <div class="text-uppercase small text-secondary fw-semibold mb-1">QR join</div>
+                    <div class="fw-semibold">One tap entry</div>
+                </div>
+                <div>
+                    <div class="text-uppercase small text-secondary fw-semibold mb-1">Results</div>
+                    <div class="fw-semibold">Live updates</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-xl-5">
+        <div class="card border-0 shadow-sm" data-role="admin" data-state-url="{{ url_for('api_admin_state') }}">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                    <div>
+                        <div class="eyebrow mb-1">Join QR</div>
+                        <h2 class="h5 mb-0">Select a session</h2>
+                    </div>
+                    <span class="badge rounded-pill text-bg-light border">Admin only</span>
+                </div>
+
+                <label class="form-label small text-secondary fw-semibold" for="session-picker">Session</label>
+                <select id="session-picker" class="form-select form-select-lg rounded-4 mb-3"></select>
+
+                <div class="qr-frame mb-3">
+                    <img id="qr-image" alt="QR code for participant login" class="img-fluid rounded-4">
+                </div>
+
+                <div class="text-secondary small" id="join-link"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 g-lg-4 mt-0">
+    <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="eyebrow mb-2">Create session</div>
+                <h2 class="h5 mb-4">New voting room</h2>
+                <form id="session-form" class="vstack gap-3">
+                    <div>
+                        <label class="form-label small text-secondary fw-semibold">Title</label>
+                        <input class="form-control form-control-lg rounded-4" name="title" placeholder="Software design review" required>
+                    </div>
+                    <div>
+                        <label class="form-label small text-secondary fw-semibold">Description</label>
+                        <textarea class="form-control rounded-4" name="description" rows="3" placeholder="Short context for the room"></textarea>
+                    </div>
+                    <button class="btn btn-primary btn-lg rounded-pill align-self-start px-4" type="submit">Create session</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="eyebrow mb-2">Create question</div>
+                <h2 class="h5 mb-4">Add vote options</h2>
+                <form id="question-form" class="vstack gap-3">
+                    <div>
+                        <label class="form-label small text-secondary fw-semibold">Question</label>
+                        <input class="form-control form-control-lg rounded-4" name="prompt" placeholder="Which topic should we cover next?" required>
+                    </div>
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+                            <span class="form-label small text-secondary fw-semibold mb-0">Answer options</span>
+                            <button class="btn btn-outline-secondary btn-sm rounded-pill" type="button" id="add-option">Add option</button>
+                        </div>
+                        <div id="options-list" class="vstack gap-2"></div>
+                    </div>
+                    <button class="btn btn-primary btn-lg rounded-pill align-self-start px-4" type="submit">Add question</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3 mt-lg-4">
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                <div>
+                    <div class="eyebrow mb-1">Sessions</div>
+                    <h2 class="h5 mb-0">Current rooms</h2>
+                </div>
+            </div>
+            <div id="admin-state" class="vstack gap-3"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}

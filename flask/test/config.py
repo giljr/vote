@@ -1,20 +1,11 @@
-"""
-Application configuration.
-
-Supports:
-
-- Development
-- Production
-- Testing
-"""
-
 import os
-
 
 BASE_DIR = os.path.abspath(
     os.path.dirname(__file__)
 )
 
+INSTANCE_DIR = os.path.join(BASE_DIR, "instance")
+os.makedirs(INSTANCE_DIR, exist_ok=True)
 
 class Config:
     """
@@ -26,22 +17,12 @@ class Config:
         "development-secret-key"
     )
 
-    PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL")
-
-
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         "DATABASE_URL",
-        "sqlite:///" +
-        os.path.join(
-            BASE_DIR,
-            "instance",
-            "vote.db"
-        )
+        f"sqlite:///{os.path.join(INSTANCE_DIR, 'vote.db')}"
     )
 
-
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-
 
 class DevelopmentConfig(Config):
     """
@@ -52,14 +33,12 @@ class DevelopmentConfig(Config):
 
     SQLALCHEMY_ECHO = True
 
-
 class ProductionConfig(Config):
     """
     Production settings.
     """
 
     DEBUG = False
-
 
 class TestingConfig(Config):
     """
@@ -71,7 +50,6 @@ class TestingConfig(Config):
     SQLALCHEMY_DATABASE_URI = (
         "sqlite:///:memory:"
     )
-
 
 config = {
 
