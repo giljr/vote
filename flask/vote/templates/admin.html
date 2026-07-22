@@ -52,7 +52,30 @@
                     <img id="qr-image" alt="QR code for participant login" class="img-fluid rounded-4">
                 </div>
 
-                <div class="text-secondary small" id="join-link"></div>
+                <div class="d-grid gap-2">
+                    <div>
+                        <label class="form-label small text-secondary fw-semibold" for="qr-base-url">QR base URL</label>
+                        <input
+                            id="qr-base-url"
+                            class="form-control rounded-4"
+                            placeholder="http://192.168.1.20:5000"
+                            autocomplete="off"
+                            inputmode="url"
+                        >
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button class="btn btn-primary btn-sm rounded-pill" type="button" id="save-qr-base">Save QR URL</button>
+                        <button class="btn btn-outline-secondary btn-sm rounded-pill" type="button" id="use-current-host">Use current host</button>
+                        <button class="btn btn-outline-secondary btn-sm rounded-pill" type="button" id="clear-qr-base">Clear</button>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button class="btn btn-outline-primary btn-sm rounded-pill" type="button" id="open-test-participant">Open test participant</button>
+                    </div>
+                    <div class="text-secondary small" id="join-link"></div>
+                    <div class="text-secondary small">
+                        Leave the field empty and the app will use the server-generated join link. Override it only when you need a different reachable URL for testing.
+                    </div>
+                </div>
             </div>
         </div>
     </div>

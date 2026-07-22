@@ -10,6 +10,11 @@ The app keeps the implementation intentionally small:
 
 import os
 import secrets
+import fcntl
+import socket
+import struct
+import ipaddress
+from urllib.parse import urlparse, urlunparse
 from urllib.parse import urljoin
 
 try:
@@ -21,6 +26,7 @@ from flask import (
     Flask,
     abort,
     jsonify,
+    make_response,
     redirect,
     render_template,
     request,
@@ -83,8 +89,62 @@ def _build_public_url(path):
 
     base_url = app.config.get("PUBLIC_BASE_URL")
     if base_url:
-        return urljoin(base_url.rstrip("/") + "/", path.lstrip("/"))
-    return url_for("index", _external=True).rstrip("/") + path
+        return urljoin(_normalize_join_base(base_url).rstrip("/") + "/", path.lstrip("/"))
+
+    host_url = request.host_url.rstrip("/")
+    if host_url.startswith("http://127.0.0.1") or host_url.startswith("http://localhost"):
+        host_url = _lan_base_url()
+    return _normalize_join_base(host_url).rstrip("/") + path
+
+
+def _normalize_join_base(base_url):
+    """Prefer plain HTTP for local/private hosts to avoid certificate errors."""
+
+    parsed = urlparse(base_url)
+    hostname = parsed.hostname or ""
+    if _is_private_or_local_host(hostname) and parsed.scheme == "https":
+        parsed = parsed._replace(scheme="http")
+    return urlunparse(parsed)
+
+
+def _is_private_or_local_host(hostname):
+    if hostname in {"localhost", "127.0.0.1", "::1"}:
+        return True
+
+    try:
+        return ipaddress.ip_address(hostname).is_private or ipaddress.ip_address(hostname).is_loopback
+    except ValueError:
+        return hostname.endswith(".local")
+
+
+def _lan_base_url():
+    """Best-effort LAN URL for QR links when PUBLIC_BASE_URL is not set."""
+
+    port = os.environ.get("PORT", "5000")
+
+    try:
+        for _, interface in socket.if_nameindex():
+            if interface == "lo":
+                continue
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+                    iface_bytes = struct.pack("256s", interface[:15].encode("utf-8"))
+                    response = fcntl.ioctl(sock.fileno(), 0x8915, iface_bytes)
+                    candidate = socket.inet_ntoa(response[20:24])
+                    if not candidate.startswith("127."):
+                        return f"http://{candidate}:{port}"
+            except OSError:
+                continue
+    except PermissionError:
+        pass
+
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+            sock.connect(("8.8.8.8", 80))
+            local_ip = sock.getsockname()[0]
+    except OSError:
+        local_ip = "127.0.0.1"
+    return f"http://{local_ip}:{port}"
 
 
 with app.app_context():
@@ -181,6 +241,14 @@ def _serialize_session(voting_session, participant_id=None):
     }
 
 
+def _json_no_cache(payload, status=200):
+    response = make_response(jsonify(payload), status)
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
+
 @app.context_processor
 def inject_current_participant():
     """Expose the logged-in participant to templates."""
@@ -248,7 +316,7 @@ def api_state():
 
     participant = _current_participant()
     if participant is None:
-        return jsonify(
+        return _json_no_cache(
             {
                 "participant": None,
                 "session": None,
@@ -264,7 +332,7 @@ def api_state():
     voting_session = db.session.get(VotingSession, session.get("session_id"))
     if voting_session is None:
         session.pop("session_id", None)
-        return jsonify(
+        return _json_no_cache(
             {
                 "participant": {
                     "id": participant.id,
@@ -280,7 +348,7 @@ def api_state():
             }
         )
 
-    return jsonify(
+    return _json_no_cache(
         {
             "participant": {
                 "id": participant.id,
@@ -298,7 +366,7 @@ def api_state():
 def api_admin_state():
     """Return all sessions for the admin UI."""
 
-    return jsonify(
+    return _json_no_cache(
         {
             "sessions": [
                 _serialize_session(voting_session)
@@ -365,9 +433,37 @@ def api_delete_session(session_id):
     """Delete a voting session."""
 
     voting_session = VotingSession.query.get_or_404(session_id)
-    db.session.delete(voting_session)
+    question_ids = [question.id for question in voting_session.questions]
+
+    if session.get("session_id") == voting_session.id:
+        session.pop("participant_id", None)
+        session.pop("session_id", None)
+
+    if question_ids:
+        Vote.query.filter(Vote.question_id.in_(question_ids)).delete(
+            synchronize_session=False,
+        )
+        Option.query.filter(
+            Option.question_id.in_(question_ids),
+        ).delete(synchronize_session=False)
+        Question.query.filter(Question.id.in_(question_ids)).delete(
+            synchronize_session=False,
+        )
+
+    VotingSession.query.filter_by(id=voting_session.id).delete(
+        synchronize_session=False,
+    )
     db.session.commit()
-    return jsonify({"sessions": []}), 200
+    return jsonify(
+        {
+            "sessions": [
+                _serialize_session(session_obj)
+                for session_obj in VotingSession.query.order_by(
+                    VotingSession.date_created.desc()
+                )
+            ]
+        }
+    ), 200
 
 
 @app.route("/api/questions/<int:question_id>/vote", methods=["POST"])
@@ -459,4 +555,8 @@ def health():
 
 
 if __name__ == "__main__":
-    app.run(debug=app.config["DEBUG"])
+    app.run(
+        host=os.environ.get("HOST", "0.0.0.0"),
+        port=int(os.environ.get("PORT", "5000")),
+        debug=app.config["DEBUG"],
+    )

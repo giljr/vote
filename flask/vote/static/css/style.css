@@ -198,6 +198,28 @@ body {
     background: rgba(33, 94, 118, 0.04);
 }
 
+.choice-card {
+    min-height: 72px;
+    justify-content: flex-start;
+    border: 0;
+    color: #fff;
+    box-shadow: 0 10px 22px rgba(19, 33, 43, 0.12);
+}
+
+.choice-card:hover {
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.choice-card .option-chip {
+    background: rgba(255, 255, 255, 0.18) !important;
+    color: #fff !important;
+}
+
+.vote-result-row + .vote-result-row {
+    margin-top: 0.4rem;
+}
+
 .option-chip {
     background: rgba(33, 94, 118, 0.08);
     color: var(--app-accent-strong);

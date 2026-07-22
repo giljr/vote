@@ -64,7 +64,7 @@ function initParticipant(panel) {
                     ? `
                         <div class="vstack gap-3">
                             ${question.options.map((option) => `
-                                <div>
+                                <div class="vote-result-row">
                                     <div class="d-flex justify-content-between gap-2 small mb-1">
                                         <strong>${escapeHtml(option.label)}</strong>
                                         <span>${option.votes} vote${option.votes === 1 ? "" : "s"} · ${option.percent}%</span>
@@ -77,16 +77,18 @@ function initParticipant(panel) {
                         </div>
                     `
                     : `
-                        <div class="list-group list-group-flush rounded-4 overflow-hidden">
-                            ${question.options.map((option) => `
+                        <div class="vstack gap-2">
+                            ${question.options.map((option, optionIndex) => `
                                 <button
-                                    class="list-group-item list-group-item-action d-flex justify-content-between align-items-center choice-button border-0 py-3 px-3"
+                                    class="btn btn-light btn-lg w-100 rounded-4 shadow-sm choice-button choice-card ${themeFor(optionIndex)}"
                                     type="button"
                                     data-vote-question="${question.id}"
                                     data-vote-option="${option.id}"
                                 >
-                                    <span class="fw-semibold">${escapeHtml(option.label)}</span>
-                                    <span class="badge rounded-pill option-chip">${option.votes} vote${option.votes === 1 ? "" : "s"}</span>
+                                    <span class="d-flex align-items-center justify-content-between gap-3 w-100">
+                                        <span class="fw-semibold text-start">${escapeHtml(option.label)}</span>
+                                        <span class="badge rounded-pill text-bg-light text-dark option-chip">${option.votes} vote${option.votes === 1 ? "" : "s"}</span>
+                                    </span>
                                 </button>
                             `).join("")}
                         </div>
@@ -124,6 +126,7 @@ function initParticipant(panel) {
     const refresh = async () => {
         const response = await fetch(stateUrl, {
             headers: { Accept: "application/json" },
+            cache: "no-store",
         });
         render(await response.json());
     };
@@ -157,10 +160,69 @@ function initAdmin(panel) {
     const optionsList = document.getElementById("options-list");
     const sessionPicker = document.getElementById("session-picker");
     const qrImage = document.getElementById("qr-image");
+    const qrBaseUrlInput = document.getElementById("qr-base-url");
+    const saveQrBaseButton = document.getElementById("save-qr-base");
+    const useCurrentHostButton = document.getElementById("use-current-host");
+    const clearQrBaseButton = document.getElementById("clear-qr-base");
+    const openTestParticipantButton = document.getElementById("open-test-participant");
     const joinLink = document.getElementById("join-link");
     const adminState = document.getElementById("admin-state");
     const addOptionButton = document.getElementById("add-option");
     let sessionsCache = [];
+    const storageKey = "vote-qr-base-url";
+
+    const isPrivateHost = (hostname) => {
+        return (
+            hostname === "localhost" ||
+            hostname === "127.0.0.1" ||
+            hostname === "::1" ||
+            hostname.endsWith(".local") ||
+            /^10\./.test(hostname) ||
+            /^192\.168\./.test(hostname) ||
+            /^172\.(1[6-9]|2\d|3[0-1])\./.test(hostname)
+        );
+    };
+
+    const loadQrBaseUrl = () => {
+        try {
+            return window.localStorage.getItem(storageKey) || "";
+        } catch (error) {
+            return "";
+        }
+    };
+
+    const saveQrBaseUrl = (value) => {
+        try {
+            window.localStorage.setItem(storageKey, value);
+        } catch (error) {
+            return;
+        }
+    };
+
+    const clearQrBaseUrl = () => {
+        try {
+            window.localStorage.removeItem(storageKey);
+        } catch (error) {
+            return;
+        }
+    };
+
+    const normalizeBaseUrl = (value) => {
+        const trimmed = value.trim();
+        if (!trimmed) {
+            return "";
+        }
+
+        try {
+            const url = new URL(trimmed);
+            if (url.protocol === "https:" && isPrivateHost(url.hostname)) {
+                url.protocol = "http:";
+            }
+            return url.toString();
+        } catch (error) {
+            return trimmed;
+        }
+    };
 
     const addOptionField = (value = "") => {
         const row = document.createElement("div");
@@ -176,6 +238,40 @@ function initAdmin(panel) {
     addOptionField("No");
 
     addOptionButton.addEventListener("click", () => addOptionField());
+
+    const storedBaseUrl = loadQrBaseUrl();
+    qrBaseUrlInput.value = normalizeBaseUrl(storedBaseUrl);
+    saveQrBaseButton.addEventListener("click", () => {
+        const normalized = normalizeBaseUrl(qrBaseUrlInput.value);
+        if (normalized) {
+            saveQrBaseUrl(normalized);
+        } else {
+            clearQrBaseUrl();
+        }
+        refresh();
+    });
+    useCurrentHostButton.addEventListener("click", () => {
+        qrBaseUrlInput.value = normalizeBaseUrl(window.location.origin);
+        saveQrBaseUrl(qrBaseUrlInput.value);
+        refresh();
+    });
+    clearQrBaseButton.addEventListener("click", () => {
+        qrBaseUrlInput.value = "";
+        clearQrBaseUrl();
+        refresh();
+    });
+    openTestParticipantButton.addEventListener("click", () => {
+        const selectedSession = sessionsCache.find((item) => String(item.id) === String(sessionPicker.value)) || sessionsCache[0];
+        if (!selectedSession) {
+            return;
+        }
+
+        const joinUrl = buildJoinUrl(selectedSession);
+        const opened = window.open(joinUrl, "_blank", "noopener");
+        if (!opened) {
+            window.location.href = joinUrl;
+        }
+    });
 
     const render = (state) => {
         const sessions = state.sessions || [];
@@ -274,10 +370,24 @@ function initAdmin(panel) {
     };
 
     const updateQrPreview = (session) => {
-        const encodedUrl = encodeURIComponent(session.join_url);
+        const joinUrl = buildJoinUrl(session);
+        const encodedUrl = encodeURIComponent(joinUrl);
         qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodedUrl}`;
         qrImage.alt = `QR code for ${session.title}`;
-        joinLink.innerHTML = `<span class="fw-semibold">Join link:</span> ${escapeHtml(session.join_url)}`;
+        joinLink.innerHTML = `<span class="fw-semibold">Join link:</span> ${escapeHtml(joinUrl)}`;
+    };
+
+    const buildJoinUrl = (session) => {
+        const baseOverride = normalizeBaseUrl(qrBaseUrlInput.value);
+        if (!baseOverride) {
+            return session.join_url;
+        }
+
+        try {
+            return new URL(`/join/${session.join_token}`, baseOverride).toString();
+        } catch (error) {
+            return session.join_url;
+        }
     };
 
     sessionPicker.addEventListener("change", () => {
@@ -362,10 +472,20 @@ function initAdmin(panel) {
 
         const deleteSessionButton = event.target.closest("[data-delete-session]");
         if (deleteSessionButton) {
-            await fetch(`/api/sessions/${deleteSessionButton.dataset.deleteSession}`, {
+            if (!window.confirm("Delete this session and all of its questions?")) {
+                return;
+            }
+
+            const response = await fetch(`/api/sessions/${deleteSessionButton.dataset.deleteSession}`, {
                 method: "DELETE",
                 headers: { Accept: "application/json" },
             });
+
+            if (!response.ok) {
+                window.alert("Could not delete the session. Please try again.");
+                return;
+            }
+
             await refresh();
         }
     });
@@ -373,6 +493,7 @@ function initAdmin(panel) {
     async function refresh() {
         const response = await fetch(stateUrl, {
             headers: { Accept: "application/json" },
+            cache: "no-store",
         });
         const data = await response.json();
         render(data);
