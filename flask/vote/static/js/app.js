@@ -725,7 +725,9 @@ function initAdmin(panel) {
     const adminState = document.getElementById("admin-state");
     const addOptionButton = document.getElementById("add-option");
     let sessionsCache = [];
-    const storageKey = "vote-qr-base-url";
+    const qrBaseUrlStorageKey = "vote-qr-base-url";
+    const selectedSessionStorageKey = "vote-admin-selected-session-id";
+    let selectedSessionId = "";
 
     const isPrivateHost = (hostname) => {
         return (
@@ -741,7 +743,7 @@ function initAdmin(panel) {
 
     const loadQrBaseUrl = () => {
         try {
-            return window.localStorage.getItem(storageKey) || "";
+            return window.localStorage.getItem(qrBaseUrlStorageKey) || "";
         } catch (error) {
             return "";
         }
@@ -749,7 +751,7 @@ function initAdmin(panel) {
 
     const saveQrBaseUrl = (value) => {
         try {
-            window.localStorage.setItem(storageKey, value);
+            window.localStorage.setItem(qrBaseUrlStorageKey, value);
         } catch (error) {
             return;
         }
@@ -757,7 +759,28 @@ function initAdmin(panel) {
 
     const clearQrBaseUrl = () => {
         try {
-            window.localStorage.removeItem(storageKey);
+            window.localStorage.removeItem(qrBaseUrlStorageKey);
+        } catch (error) {
+            return;
+        }
+    };
+
+    const loadSelectedSessionId = () => {
+        try {
+            return window.localStorage.getItem(selectedSessionStorageKey) || "";
+        } catch (error) {
+            return "";
+        }
+    };
+
+    const saveSelectedSessionId = (value) => {
+        selectedSessionId = String(value || "");
+        try {
+            if (selectedSessionId) {
+                window.localStorage.setItem(selectedSessionStorageKey, selectedSessionId);
+            } else {
+                window.localStorage.removeItem(selectedSessionStorageKey);
+            }
         } catch (error) {
             return;
         }
@@ -813,6 +836,7 @@ function initAdmin(panel) {
     resetOptionFields();
     addOptionButton.addEventListener("click", () => addOptionField());
 
+    selectedSessionId = loadSelectedSessionId();
     const storedBaseUrl = loadQrBaseUrl();
     qrBaseUrlInput.value = normalizeBaseUrl(storedBaseUrl);
     saveQrBaseButton.addEventListener("click", () => {
@@ -850,6 +874,7 @@ function initAdmin(panel) {
     const render = (state) => {
         const sessions = state.sessions || [];
         sessionsCache = sessions;
+        const currentSessionId = selectedSessionId || sessionPicker.value;
 
         sessionPicker.innerHTML = sessions.map((session) => `
             <option value="${session.id}">${escapeHtml(session.title)}</option>
@@ -866,8 +891,9 @@ function initAdmin(panel) {
             return;
         }
 
-        const selectedSession = sessions.find((item) => String(item.id) === String(sessionPicker.value)) || sessions[0];
+        const selectedSession = sessions.find((item) => String(item.id) === String(currentSessionId)) || sessions[0];
         sessionPicker.value = selectedSession.id;
+        saveSelectedSessionId(selectedSession.id);
         updateQrPreview(selectedSession);
 
         adminState.innerHTML = sessions.map((session, sessionIndex) => {
@@ -974,6 +1000,7 @@ function initAdmin(panel) {
     sessionPicker.addEventListener("change", () => {
         const selected = sessionsCache.find((item) => String(item.id) === String(sessionPicker.value));
         if (selected) {
+            saveSelectedSessionId(selected.id);
             updateQrPreview(selected);
         }
     });
