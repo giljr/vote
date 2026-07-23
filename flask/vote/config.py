@@ -28,6 +28,18 @@ class Config:
 
     PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL")
 
+    QUIZ_DEFAULT_TIME_LIMIT_SECONDS = int(
+        os.environ.get("QUIZ_DEFAULT_TIME_LIMIT_SECONDS", "23")
+    )
+
+    QUIZ_DEFAULT_POINTS_BASE = int(
+        os.environ.get("QUIZ_DEFAULT_POINTS_BASE", "10")
+    )
+
+    QUIZ_FEEDBACK_SECONDS = int(
+        os.environ.get("QUIZ_FEEDBACK_SECONDS", "10")
+    )
+
 
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         "DATABASE_URL",

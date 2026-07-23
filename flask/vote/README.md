@@ -1,13 +1,14 @@
 # Vote
 
-A small Flask and SQLAlchemy voting app built as a learning project.
+A small Flask and SQLAlchemy classroom quiz app built as a learning project.
 
 ## What it does
 
-- Lecturers create voting sessions, questions, and answer options in advance
+- Lecturers create sessions, questions, answer options, correct answers, time limits, and base points in advance
 - Participants join a session by scanning a QR code with their phone
-- Each participant can vote once per question
-- Results update live in the browser through JavaScript polling
+- Each participant answers one timed attempt per question
+- The server stores the question start time, calculates the deadline, grades the attempt, and awards score
+- Participants see immediate feedback, a speed bonus, and controlled advance between questions
 
 ## Tech Stack
 
@@ -16,6 +17,28 @@ A small Flask and SQLAlchemy voting app built as a learning project.
 - SQLite
 - Jinja2 templates
 - Plain JavaScript
+
+## Quiz Rules
+
+- Default time limit: `QUIZ_DEFAULT_TIME_LIMIT_SECONDS=23`
+- Default base points: `QUIZ_DEFAULT_POINTS_BASE=10`
+- Feedback delay before auto-advance: `QUIZ_FEEDBACK_SECONDS=10`
+- Score formula: `bonus = max(time_limit_seconds - time_used_seconds, 0)` and `points_awarded = points_base + bonus` only when the answer is correct
+- The browser never sends trusted time, score, correctness, or timeout state. It only submits an option or a timeout request; the server validates the current deadline and computes the result.
+
+The participant state machine uses these states:
+
+```text
+loading
+answering
+submitting
+answered_correct
+answered_incorrect
+timed_out
+advancing
+completed
+error
+```
 
 ## Run It
 
@@ -39,6 +62,16 @@ If you do not want to override anything, leave the QR base URL blank and the app
 - `/join/<token>` QR login entry point
 - `/api/state` live participant data
 - `/api/admin/state` live admin data
+- `/api/questions/<question_id>/vote` idempotent answer/timeout endpoint
+- `/api/quiz/advance` manual or automatic participant advance endpoint
+
+## Tests
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 FLASK_ENV=testing .venv/bin/python -m unittest test_quiz_flow.py
+```
+
+The suite covers correct/incorrect answers, timeout, score boundaries, tampered client payloads, invalid options, idempotent replays, deadline persistence after reload, manual/automatic advance, review mode, finalization, keyboard semantics, responsive CSS, and reduced-motion support.
 
 ## Demo Data
 
@@ -58,6 +91,7 @@ models.py          SQLAlchemy models
 templates/         HTML templates
 static/css/        Styling
 static/js/        Frontend behavior
+test_quiz_flow.py  Server and frontend-contract tests
 ```
 
 ## Notes

@@ -1,116 +1,20 @@
 {% extends "base.html" %}
 
-{% block title %}Participant Dashboard{% endblock %}
+{% block title %}Quiz temporizado{% endblock %}
+
+{% block nav %}{% endblock %}
 
 {% block content %}
-<div class="row g-3 g-lg-4 align-items-start">
-    <div class="col-12 col-xl-7">
-        <div class="hero-copy p-4 p-lg-5 mb-3 mb-lg-4">
-            <span class="eyebrow">Live classroom voting</span>
-            <h1 class="display-5 fw-semibold mt-3 mb-3">Join a session, vote once, and see the room update live.</h1>
-            <p class="lead mb-4 text-secondary">
-                Scan the lecturer QR code on your phone to log in, answer each question, and watch results update without reloading the page.
-            </p>
-            <div class="d-flex flex-wrap gap-2">
-                <a class="btn btn-primary btn-lg rounded-pill px-4" href="{{ url_for('admin') }}">Open admin dashboard</a>
-                {% if participant %}
-                    <a class="btn btn-outline-secondary btn-lg rounded-pill px-4" href="{{ url_for('logout') }}">Log out</a>
-                {% endif %}
-            </div>
-        </div>
-
-        <div class="d-grid gap-3">
-            <div class="card info-card border-0 shadow-sm">
-                <div class="card-body d-flex flex-wrap gap-3 justify-content-between align-items-center">
-                    <div>
-                        <div class="text-uppercase small text-secondary fw-semibold mb-1">Session</div>
-                        <div class="fw-semibold">{% if active_session %}Active{% else %}Waiting{% endif %}</div>
-                    </div>
-                    <div>
-                        <div class="text-uppercase small text-secondary fw-semibold mb-1">Mode</div>
-                        <div class="fw-semibold">Participant</div>
-                    </div>
-                    <div>
-                        <div class="text-uppercase small text-secondary fw-semibold mb-1">Updates</div>
-                        <div class="fw-semibold">Auto refresh</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-4" data-role="participant" data-state-url="{{ url_for('api_state') }}">
-                    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-                        <div>
-                            <div class="eyebrow mb-1">Current status</div>
-                            <h2 class="h5 mb-0" data-participant-name>
-                                {% if participant %}
-                                    {{ participant.display_name }}
-                                {% else %}
-                                    Waiting for QR login
-                                {% endif %}
-                            </h2>
-                        </div>
-                        <span class="badge rounded-pill text-bg-light border" data-session-badge>
-                            {% if active_session %}
-                                Joined
-                            {% else %}
-                                Not connected
-                            {% endif %}
-                        </span>
-                    </div>
-
-                    <div id="participant-state">
-                        {% if active_session %}
-                            <div class="text-secondary">Loading live questions...</div>
-                        {% else %}
-                            <div class="py-3">
-                                <div class="fw-semibold mb-1">No active session yet</div>
-                                <p class="text-secondary mb-0">
-                                    Scan a lecturer QR code or use the admin screen to create a session.
-                                </p>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
+<section
+    class="quiz-page"
+    data-role="participant"
+    data-state-url="{{ url_for('api_state') }}"
+    data-advance-url="{{ url_for('api_advance_quiz') }}"
+>
+    <div id="participant-state" class="quiz-stage" aria-live="polite">
+        <div class="quiz-empty-state" role="status">
+            Carregando quiz...
         </div>
     </div>
-
-    <div class="col-12 col-xl-5">
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-                    <div>
-                        <div class="eyebrow mb-1">What this does</div>
-                        <h2 class="h5 mb-0">Simple live voting for classrooms</h2>
-                    </div>
-                    <span class="badge rounded-pill text-bg-primary-subtle text-primary border border-primary-subtle">Bootstrap UI</span>
-                </div>
-                <div class="vstack gap-3">
-                    <div class="feature-row">
-                        <div class="fw-semibold">Join by QR</div>
-                        <div class="text-secondary small">Participants log in from a phone.</div>
-                    </div>
-                    <div class="feature-row">
-                        <div class="fw-semibold">Vote once</div>
-                        <div class="text-secondary small">Each question stores a single choice per participant.</div>
-                    </div>
-                    <div class="feature-row">
-                        <div class="fw-semibold">Live results</div>
-                        <div class="text-secondary small">Counts refresh automatically in the browser.</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
-                <div class="eyebrow mb-2">Notes</div>
-                <p class="text-secondary mb-0">
-                    The lecturer creates sessions and questions in advance. Participants only see the active room and the questions assigned to it.
-                </p>
-            </div>
-        </div>
-    </div>
-</div>
+</section>
 {% endblock %}

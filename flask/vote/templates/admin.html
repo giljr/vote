@@ -112,11 +112,38 @@
                         <label class="form-label small text-secondary fw-semibold">Question</label>
                         <input class="form-control form-control-lg rounded-4" name="prompt" placeholder="Which topic should we cover next?" required>
                     </div>
+                    <div class="row g-2">
+                        <div class="col-12 col-sm-6">
+                            <label class="form-label small text-secondary fw-semibold">Time limit</label>
+                            <input
+                                class="form-control rounded-4"
+                                name="time_limit_seconds"
+                                type="number"
+                                min="1"
+                                max="600"
+                                value="{{ default_time_limit }}"
+                                required
+                            >
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <label class="form-label small text-secondary fw-semibold">Base points</label>
+                            <input
+                                class="form-control rounded-4"
+                                name="points_base"
+                                type="number"
+                                min="0"
+                                max="1000"
+                                value="{{ default_points_base }}"
+                                required
+                            >
+                        </div>
+                    </div>
                     <div>
                         <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
                             <span class="form-label small text-secondary fw-semibold mb-0">Answer options</span>
                             <button class="btn btn-outline-secondary btn-sm rounded-pill" type="button" id="add-option">Add option</button>
                         </div>
+                        <div class="text-secondary small mb-2">Select the correct answer before saving.</div>
                         <div id="options-list" class="vstack gap-2"></div>
                     </div>
                     <button class="btn btn-primary btn-lg rounded-pill align-self-start px-4" type="submit">Add question</button>

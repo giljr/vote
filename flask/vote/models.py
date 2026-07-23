@@ -7,6 +7,9 @@ The schema is intentionally small:
 - options belong to questions
 - participants join through the QR link
 - votes enforce one choice per question per participant
+- quiz starts persist the server-side deadline per participant/question
+- answer attempts enforce one outcome per question per participant
+- participant progress controls the active/review flow
 """
 
 from datetime import datetime
@@ -70,6 +73,8 @@ class Question(db.Model, TimestampMixin):
     prompt = db.Column(db.String(500), nullable=False)
     position = db.Column(db.Integer, default=0, nullable=False)
     is_open = db.Column(db.Boolean, default=True, nullable=False)
+    time_limit_seconds = db.Column(db.Integer, default=23, nullable=False)
+    points_base = db.Column(db.Integer, default=10, nullable=False)
 
     session = db.relationship("VotingSession", back_populates="questions")
     options = db.relationship(
@@ -80,6 +85,16 @@ class Question(db.Model, TimestampMixin):
     )
     votes = db.relationship(
         "Vote",
+        back_populates="question",
+        cascade="all, delete-orphan",
+    )
+    starts = db.relationship(
+        "QuestionStart",
+        back_populates="question",
+        cascade="all, delete-orphan",
+    )
+    attempts = db.relationship(
+        "AnswerAttempt",
         back_populates="question",
         cascade="all, delete-orphan",
     )
@@ -100,12 +115,17 @@ class Option(db.Model, TimestampMixin):
     )
     label = db.Column(db.String(200), nullable=False)
     position = db.Column(db.Integer, default=0, nullable=False)
+    is_correct = db.Column(db.Boolean, default=False, nullable=False)
 
     question = db.relationship("Question", back_populates="options")
     votes = db.relationship(
         "Vote",
         back_populates="option",
         cascade="all, delete-orphan",
+    )
+    attempts = db.relationship(
+        "AnswerAttempt",
+        back_populates="option",
     )
 
     def __repr__(self):
@@ -124,9 +144,25 @@ class Participant(db.Model, TimestampMixin):
         default=lambda: secrets.token_urlsafe(16),
     )
     display_name = db.Column(db.String(120), nullable=False)
+    score = db.Column(db.Integer, default=0, nullable=False)
 
     votes = db.relationship(
         "Vote",
+        back_populates="participant",
+        cascade="all, delete-orphan",
+    )
+    quiz_progress = db.relationship(
+        "ParticipantSessionState",
+        back_populates="participant",
+        cascade="all, delete-orphan",
+    )
+    starts = db.relationship(
+        "QuestionStart",
+        back_populates="participant",
+        cascade="all, delete-orphan",
+    )
+    attempts = db.relationship(
+        "AnswerAttempt",
         back_populates="participant",
         cascade="all, delete-orphan",
     )
@@ -169,3 +205,119 @@ class Vote(db.Model, TimestampMixin):
 
     def __repr__(self):
         return f"<Vote participant={self.participant_id} question={self.question_id}>"
+
+
+class ParticipantSessionState(db.Model, TimestampMixin):
+    """Tracks where a participant is in a session quiz flow."""
+
+    __tablename__ = "participant_session_states"
+    __table_args__ = (
+        db.UniqueConstraint(
+            "participant_id",
+            "session_id",
+            name="uq_participant_session_state",
+        ),
+    )
+
+    participant_id = db.Column(
+        db.Integer,
+        db.ForeignKey("participants.id"),
+        nullable=False,
+    )
+    session_id = db.Column(
+        db.Integer,
+        db.ForeignKey("voting_sessions.id"),
+        nullable=False,
+    )
+    current_question_id = db.Column(
+        db.Integer,
+        db.ForeignKey("questions.id"),
+        nullable=True,
+    )
+    mode = db.Column(db.String(20), default="active", nullable=False)
+    completed_at = db.Column(db.DateTime, nullable=True)
+
+    participant = db.relationship("Participant", back_populates="quiz_progress")
+    voting_session = db.relationship("VotingSession")
+    current_question = db.relationship("Question")
+
+    def __repr__(self):
+        return (
+            f"<ParticipantSessionState participant={self.participant_id} "
+            f"session={self.session_id} mode={self.mode}>"
+        )
+
+
+class QuestionStart(db.Model, TimestampMixin):
+    """Server-side start time for a participant/question deadline."""
+
+    __tablename__ = "question_starts"
+    __table_args__ = (
+        db.UniqueConstraint(
+            "participant_id",
+            "question_id",
+            name="uq_participant_question_start",
+        ),
+    )
+
+    participant_id = db.Column(
+        db.Integer,
+        db.ForeignKey("participants.id"),
+        nullable=False,
+    )
+    question_id = db.Column(
+        db.Integer,
+        db.ForeignKey("questions.id"),
+        nullable=False,
+    )
+    started_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    participant = db.relationship("Participant", back_populates="starts")
+    question = db.relationship("Question", back_populates="starts")
+
+    def __repr__(self):
+        return f"<QuestionStart participant={self.participant_id} question={self.question_id}>"
+
+
+class AnswerAttempt(db.Model, TimestampMixin):
+    """A single graded answer or timeout for a participant/question."""
+
+    __tablename__ = "answer_attempts"
+    __table_args__ = (
+        db.UniqueConstraint(
+            "participant_id",
+            "question_id",
+            name="uq_participant_question_attempt",
+        ),
+    )
+
+    participant_id = db.Column(
+        db.Integer,
+        db.ForeignKey("participants.id"),
+        nullable=False,
+    )
+    question_id = db.Column(
+        db.Integer,
+        db.ForeignKey("questions.id"),
+        nullable=False,
+    )
+    option_id = db.Column(
+        db.Integer,
+        db.ForeignKey("options.id"),
+        nullable=True,
+    )
+    is_correct = db.Column(db.Boolean, default=False, nullable=False)
+    timed_out = db.Column(db.Boolean, default=False, nullable=False)
+    points_base = db.Column(db.Integer, default=0, nullable=False)
+    bonus_points = db.Column(db.Integer, default=0, nullable=False)
+    points_awarded = db.Column(db.Integer, default=0, nullable=False)
+    time_started_at = db.Column(db.DateTime, nullable=False)
+    time_answered_at = db.Column(db.DateTime, nullable=False)
+    time_used_seconds = db.Column(db.Integer, default=0, nullable=False)
+
+    participant = db.relationship("Participant", back_populates="attempts")
+    question = db.relationship("Question", back_populates="attempts")
+    option = db.relationship("Option", back_populates="attempts")
+
+    def __repr__(self):
+        return f"<AnswerAttempt participant={self.participant_id} question={self.question_id}>"
